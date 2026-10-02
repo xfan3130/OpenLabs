@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/*
+ * OpenLab design tokens. A restrained light theme: near-white surfaces,
+ * hairline borders, one deep-blue accent for actions, and the categorical
+ * chart colours reserved for data.
+ */
+:root {
+  --background: #f5f5f3;
+  --foreground: #1b1b19;
+  --card: #ffffff;
+  --panel: #fbfbfa;
+  --primary: #1c5cab;
+  --primary-foreground: #ffffff;
+  --secondary: #ecebe7;
+  --secondary-foreground: #1b1b19;
+  --muted: #f0efec;
+  --muted-foreground: #5f5e5a;
+  --accent: #eaf2fc;
+  --accent-foreground: #104281;
+  --destructive: #c23a3a;
+  --border: #e3e2dc;
+  --input: #d3d2cb;
+  --ring: #2a78d6;
+  --warning: #fff8e8;
+  --warning-foreground: #6b4600;
+  --warning-border: #efd8a6;
+  --success: #006300;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-panel: var(--panel);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-border: var(--warning-border);
+  --color-success: var(--success);
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: #cde2fb;
+  }
+}
+
+/* Plotly's hover layer should use the app font too. */
+.js-plotly-plot .plotly .hovertext text {
+  font-family: var(--font-sans) !important;
+}
