@@ -111,8 +111,14 @@ export function GraphSettingsPanel({
               id="y-unit"
               value={yUnitValue}
               placeholder={yUnitsDiffer ? "mixed" : "e.g. m"}
-              disabled={ys.length === 0}
-              title={ys.length > 1 ? "Applies to every plotted Y variable" : undefined}
+              disabled={ys.length === 0 || yUnitsDiffer}
+              title={
+                yUnitsDiffer
+                  ? "The plotted Y variables have different units. Plot one at a time to edit its unit."
+                  : ys.length > 1
+                    ? "Applies to every plotted Y variable"
+                    : undefined
+              }
               onChange={(e) =>
                 setUnit(
                   ys.map((c) => c.id),

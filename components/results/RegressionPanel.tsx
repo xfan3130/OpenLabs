@@ -87,7 +87,9 @@ export function RegressionPanel({
                     {formatWithUncertainty(p.value, p.stdError)}
                     {units[i] && <span className="text-muted-foreground"> {units[i]}</span>}
                     {Number.isFinite(rel) && (
-                      <div className="text-[11px] text-muted-foreground">±{formatPercent(rel)}</div>
+                      <div className="text-[11px] text-muted-foreground" title="Relative standard error">
+                        {rel < 100 ? `±${formatPercent(rel)}` : "> 100 % (consistent with 0)"}
+                      </div>
                     )}
                   </td>
                 </tr>

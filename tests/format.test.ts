@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatNumber, formatPercent, formatPlain, formatWithUncertainty } from "@/lib/format";
+import { formatMeasured, formatNumber, formatPercent, formatPlain, formatWithUncertainty } from "@/lib/format";
+import { formatEquation, formatRSquared, parameterUnits } from "@/lib/report";
 import { parseHeaderUnit, quotientUnit } from "@/lib/units";
 import { absoluteUncertainties, chiSquare, percentUncertainty } from "@/lib/uncertainty";
 
@@ -29,6 +30,19 @@ describe("formatNumber", () => {
   });
 });
 
+describe("formatMeasured", () => {
+  it("shows recorded values without padding zeros", () => {
+    expect(formatMeasured(-0.003)).toBe("−0.003");
+    expect(formatMeasured(1.2)).toBe("1.2");
+    expect(formatMeasured(7.052)).toBe("7.052");
+    expect(formatMeasured(120)).toBe("120");
+    expect(formatMeasured(0)).toBe("0");
+    expect(formatMeasured(0.00002)).toBe("2 × 10⁻⁵");
+    expect(formatMeasured(1.23456789)).toBe("1.23457");
+    expect(formatMeasured(NaN)).toBe("—");
+  });
+});
+
 describe("formatWithUncertainty", () => {
   it("rounds the uncertainty to 1 significant figure and the value to match", () => {
     expect(formatWithUncertainty(4.8213, 0.0532)).toBe("4.82 ± 0.05");
@@ -44,6 +58,11 @@ describe("formatWithUncertainty", () => {
 
   it("handles uncertainties larger than 1", () => {
     expect(formatWithUncertainty(12345, 320)).toBe("12300 ± 300");
+  });
+
+  it("does not produce absurd digit strings for floating-point-noise uncertainties", () => {
+    expect(formatWithUncertainty(4.8999999999999995, 8.6e-16)).toBe("4.900 ± 8.6 × 10⁻¹⁶");
+    expect(formatWithUncertainty(4.9, 3e-9)).toBe("4.900000000 ± 0.000000003");
   });
 
   it("falls back when the uncertainty is undefined", () => {
@@ -66,6 +85,30 @@ describe("formatPercent / formatPlain", () => {
   });
 });
 
+describe("report helpers", () => {
+  it("formats R² with enough digits to tell good fits apart", () => {
+    expect(formatRSquared(0.95)).toBe("0.9500");
+    expect(formatRSquared(0.9982)).toBe("0.9982");
+    expect(formatRSquared(0.999996)).toBe("0.9999960");
+    expect(formatRSquared(1)).toBe("1.0000");
+    expect(formatRSquared(NaN)).toBe("undefined");
+  });
+
+  it("writes fitted equations with proper signs", () => {
+    expect(formatEquation("linear", [4.82, 0.13])).toBe("y = 4.820x + 0.1300");
+    expect(formatEquation("quadratic", [4.9, -0.012, 0.008])).toBe("y = 4.900x² − 0.01200x + 0.008000");
+    expect(formatEquation("linear", [2, 0.0008])).toBe("y = 2.000x + (8.000 × 10⁻⁴)");
+    expect(formatEquation("exponential", [5, -0.4545])).toBe("y = 5.000·e^(−0.4545x)");
+    expect(formatEquation("power", [2.006, 0.5])).toBe("y = 2.006·x^0.5000");
+  });
+
+  it("derives parameter units from the axis units", () => {
+    expect(parameterUnits("linear", "s", "m")).toEqual(["m/s", "m"]);
+    expect(parameterUnits("quadratic", "s", "m")).toEqual(["m/s²", "m/s", "m"]);
+    expect(parameterUnits("exponential", "s", "V")).toEqual(["V", "1/s"]);
+  });
+});
+
 describe("units", () => {
   it("extracts units from headers", () => {
     expect(parseHeaderUnit("time (s)")).toEqual({ name: "time", unit: "s" });
@@ -78,7 +121,10 @@ describe("units", () => {
     expect(quotientUnit("m", "s", 2)).toBe("m/s²");
     expect(quotientUnit("", "s")).toBe("1/s");
     expect(quotientUnit("m", "")).toBe("m");
-    expect(quotientUnit("m/s", "s")).toBe("(m/s)/s");
+    expect(quotientUnit("m/s", "s")).toBe("m/s²");
+    expect(quotientUnit("m/s²", "s")).toBe("m/s³");
+    expect(quotientUnit("1/s", "s", 2)).toBe("1/s³");
+    expect(quotientUnit("m/s", "kg")).toBe("(m/s)/kg");
     expect(quotientUnit("m", "m")).toBe("");
   });
 });

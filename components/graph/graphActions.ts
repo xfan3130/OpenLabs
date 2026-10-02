@@ -22,9 +22,21 @@ export async function resetView(gd: PlotlyHTMLElement, xRange: AxisRange, yRange
   await Plotly.relayout(gd, { ...axisUpdate("xaxis", xRange), ...axisUpdate("yaxis", yRange) } as never);
 }
 
-/** Download the graph as a high-resolution PNG at its on-screen size. */
+/**
+ * Fonts available to the image renderer. The on-screen web font cannot be
+ * embedded in Plotly's SVG-to-PNG step, so text would be laid out with one
+ * font and drawn with another (overlapping legend entries). Exporting with a
+ * common system font keeps measurement and drawing consistent.
+ */
+const EXPORT_FONT = "Helvetica Neue, Helvetica, Arial, Liberation Sans, DejaVu Sans, sans-serif";
+
+/** Download the graph as a high-resolution PNG at its on-screen size, keeping the current zoom. */
 export async function downloadGraphPng(gd: PlotlyHTMLElement, fileName: string): Promise<void> {
   const Plotly = await loadPlotly();
+  const figure = {
+    data: gd.data,
+    layout: { ...gd.layout, font: { ...gd.layout.font, family: EXPORT_FONT } },
+  };
   // `scale` (supersampling for a sharp image) is supported by Plotly but missing from its type definitions.
   const options = {
     format: "png" as const,
@@ -33,5 +45,5 @@ export async function downloadGraphPng(gd: PlotlyHTMLElement, fileName: string):
     height: Math.max(gd.clientHeight, 420),
     scale: 2,
   };
-  await Plotly.downloadImage(gd, options);
+  await Plotly.downloadImage(figure as never, options);
 }

@@ -50,6 +50,16 @@ export function formatNumber(value: number, sig = 4): string {
 }
 
 /**
+ * A measured value as recorded: up to 6 significant figures without padding
+ * zeros, so −0.003 is not shown as "−0.003000" (which would claim precision
+ * the measurement does not have). Uses the same notation rules as formatNumber.
+ */
+export function formatMeasured(value: number): string {
+  const text = formatNumber(value, 6);
+  return text.replace(/^([−\d]+\.\d*?)0+(?=$| ×)/, "$1").replace(/\.(?=$| ×)/, "");
+}
+
+/**
  * Plain ASCII number with up to `sig` significant figures and no trailing
  * zeros, for CSV / machine-readable output. NaN → "".
  */
@@ -90,7 +100,15 @@ export function formatWithUncertainty(value: number, uncertainty: number): strin
 
   const vExp = v === 0 ? uExp : Math.floor(Math.log10(Math.abs(v)));
   const leadExp = Math.max(vExp, uExp);
-  if (leadExp >= SCI_LOW_EXPONENT && leadExp < SCI_HIGH_EXPONENT && place >= -8) {
+
+  // An uncertainty many orders of magnitude below the value (typically
+  // floating-point noise from an exact fit) cannot be written in matched
+  // decimal form; show both numbers separately instead.
+  if (leadExp - place + 1 > 10) {
+    return `${formatNumber(value)} ± ${formatNumber(uncertainty, 2)}`;
+  }
+
+  if (leadExp >= SCI_LOW_EXPONENT && leadExp < SCI_HIGH_EXPONENT && place >= -6) {
     const decimals = Math.max(0, -place);
     return `${withMinus(v.toFixed(decimals))} ± ${u.toFixed(decimals)}`;
   }
@@ -100,6 +118,7 @@ export function formatWithUncertainty(value: number, uncertainty: number): strin
   const factor = Math.pow(10, leadExp);
   const vm = withMinus((v / factor).toFixed(decimals));
   const um = (u / factor).toFixed(decimals);
+  if (leadExp === 0) return `${vm} ± ${um}`;
   return `(${vm} ± ${um}) × 10${toSuperscript(String(leadExp))}`;
 }
 

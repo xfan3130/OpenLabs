@@ -1,6 +1,6 @@
 import type { DataColumn } from "@/types/dataset";
 import { describe } from "@/lib/statistics";
-import { formatNumber, formatWithUncertainty, withUnit } from "@/lib/format";
+import { formatMeasured, formatNumber, formatWithUncertainty, withUnit } from "@/lib/format";
 import { Hint, Section } from "@/components/shared/Section";
 
 function StatRow({ label, value, title }: { label: string; value: string; title?: string }) {
@@ -34,10 +34,10 @@ function ColumnStats({ column, axis, color }: { column: DataColumn; axis: "x" | 
           value={withUnit(formatWithUncertainty(s.mean, s.stdError), u)}
           title="Mean with its standard error"
         />
-        <StatRow label="Median" value={withUnit(formatNumber(s.median), u)} />
-        <StatRow label="Minimum" value={withUnit(formatNumber(s.min), u)} />
-        <StatRow label="Maximum" value={withUnit(formatNumber(s.max), u)} />
-        <StatRow label="Range" value={withUnit(formatNumber(s.range), u)} />
+        <StatRow label="Median" value={withUnit(formatMeasured(s.median), u)} />
+        <StatRow label="Minimum" value={withUnit(formatMeasured(s.min), u)} />
+        <StatRow label="Maximum" value={withUnit(formatMeasured(s.max), u)} />
+        <StatRow label="Range" value={withUnit(formatMeasured(s.range), u)} />
         <StatRow label="Std deviation" value={withUnit(formatNumber(s.stdDev), u)} title="Sample standard deviation (n − 1)" />
         <StatRow label="Std error" value={withUnit(formatNumber(s.stdError), u)} title="Standard error of the mean, s/√n" />
       </dl>

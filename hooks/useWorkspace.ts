@@ -88,7 +88,7 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 // ---------------------------------------------------------------------------
 
 /** JSON has no NaN, so missing values are stored as null and restored on load. */
-function serialize(state: WorkspaceState): string {
+export function serializeWorkspace(state: WorkspaceState): string {
   return JSON.stringify(state, (_key, value) =>
     typeof value === "number" && !Number.isFinite(value) ? null : value,
   );
@@ -109,7 +109,7 @@ function isDataset(value: unknown): value is Dataset {
   );
 }
 
-function deserialize(text: string): WorkspaceState | null {
+export function deserializeWorkspace(text: string): WorkspaceState | null {
   const raw = JSON.parse(text) as { datasets?: unknown; activeId?: unknown };
   if (!raw || !Array.isArray(raw.datasets) || !raw.datasets.every(isDataset)) return null;
   const datasets = (raw.datasets as Dataset[]).map((d) => ({
@@ -130,7 +130,7 @@ export function loadWorkspace(): WorkspaceState {
   try {
     const text = window.localStorage.getItem(STORAGE_KEY);
     if (!text) return EMPTY_WORKSPACE;
-    return deserialize(text) ?? EMPTY_WORKSPACE;
+    return deserializeWorkspace(text) ?? EMPTY_WORKSPACE;
   } catch {
     return EMPTY_WORKSPACE;
   }
@@ -138,7 +138,7 @@ export function loadWorkspace(): WorkspaceState {
 
 function saveWorkspace(state: WorkspaceState): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, serialize(state));
+    window.localStorage.setItem(STORAGE_KEY, serializeWorkspace(state));
   } catch {
     // Storage full or unavailable (private mode): autosave is best-effort.
   }

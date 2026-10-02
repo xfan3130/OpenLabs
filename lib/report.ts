@@ -67,10 +67,16 @@ export function parameterUnits(model: RegressionModel, xUnit: string, yUnit: str
   }
 }
 
-/** R² with enough digits to distinguish good fits (0.99982 vs 0.99991). */
+/**
+ * R² with enough decimals to show at least two significant digits of 1 − R²,
+ * so good fits stay distinguishable (0.99982 vs 0.99991), between 4 and 8
+ * decimals.
+ */
 export function formatRSquared(r2: number): string {
   if (!Number.isFinite(r2)) return "undefined";
-  return r2.toFixed(r2 > 0.999 ? 5 : 4);
+  const shortfall = 1 - r2;
+  const decimals = shortfall > 0 ? Math.min(8, Math.max(4, Math.ceil(-Math.log10(shortfall)) + 1)) : 4;
+  return r2.toFixed(decimals);
 }
 
 export interface ReportContext {
@@ -86,8 +92,8 @@ function parameterLines(ctx: ReportContext): string[] {
   return ctx.fit.params.map((p, i) => {
     const valueText = formatWithUncertainty(p.value, p.stdError);
     const unit = units[i] ? ` ${units[i]}` : "";
-    const relative =
-      Number.isFinite(p.stdError) && p.value !== 0 ? `  (${formatNumber((p.stdError / Math.abs(p.value)) * 100, 2)} %)` : "";
+    const rel = Number.isFinite(p.stdError) && p.value !== 0 ? (p.stdError / Math.abs(p.value)) * 100 : NaN;
+    const relative = Number.isFinite(rel) ? `  (${rel < 100 ? `${formatNumber(rel, 2)} %` : "> 100 %, consistent with 0"})` : "";
     return `  ${p.symbol} (${p.name}) = ${valueText}${unit}${relative}`;
   });
 }

@@ -47,6 +47,17 @@ function needsParens(unit: string): boolean {
   return /[\s/·*]/.test(unit);
 }
 
+const FROM_SUPERSCRIPT: Record<string, string> = Object.fromEntries(
+  Object.entries(SUPERSCRIPT_DIGITS).map(([plain, sup]) => [sup, plain === "−" ? "-" : plain]),
+);
+
+/** "²" → 2, "" → 1. */
+function superscriptPower(text: string): number {
+  if (!text) return 1;
+  const n = Number(Array.from(text).map((ch) => FROM_SUPERSCRIPT[ch] ?? ch).join(""));
+  return Number.isFinite(n) ? n : NaN;
+}
+
 /** u raised to an integer power, e.g. ("s", 2) → "s²". */
 export function powerUnit(unit: string, power: number): string {
   if (!unit || power === 0) return "";
@@ -65,6 +76,12 @@ export function quotientUnit(numerator: string, denominator: string, power = 1):
   const den = powerUnit(denominator.trim(), power);
   if (!den) return num;
   if (num && num === denominator.trim() && power === 1) return "";
+  // (a/bⁿ) / bᵖ → a/bⁿ⁺ᵖ, e.g. (m/s)/s → m/s²
+  const nested = /^([^/()]+)\/([^/()\s·*⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+)([⁰¹²³⁴⁵⁶⁷⁸⁹]*)$/.exec(num);
+  if (nested && nested[2] === denominator.trim()) {
+    const n = superscriptPower(nested[3]);
+    if (Number.isFinite(n)) return `${nested[1]}/${powerUnit(nested[2], n + power)}`;
+  }
   const top = num ? (num.includes("/") ? `(${num})` : num) : "1";
   const bottom = needsParens(den) && !/^\(.*\)\S*$/.test(den) ? `(${den})` : den;
   return `${top}/${bottom}`;

@@ -20,6 +20,12 @@ const GRID = "#e8e7e1";
 const AXIS_LINE = "#b9b8b0";
 const SURFACE = "#ffffff";
 
+/**
+ * Shared left margin so the main and residual plots line up vertically.
+ * Axes still use automargin, which only widens it for unusually long labels.
+ */
+const PLOT_LEFT_MARGIN = 84;
+
 /** Above this many points WebGL rendering keeps the graph responsive. */
 const WEBGL_THRESHOLD = 5000;
 
@@ -197,7 +203,7 @@ export function buildMainFigure(input: MainFigureInput): Figure {
       ? { text: escapeLabel(input.title), x: 0.01, xanchor: "left", font: { size: 15, color: INK } }
       : undefined,
     showlegend: showLegend,
-    margin: { l: 16, r: 16, t: (input.title ? 44 : 12) + (showLegend ? 28 : 0), b: 16 },
+    margin: { l: PLOT_LEFT_MARGIN, r: 16, t: (input.title ? 44 : 12) + (showLegend ? 28 : 0), b: 16 },
     xaxis: axisStyle(escapeLabel(input.xTitle), input.xRange) as Partial<Layout["xaxis"]>,
     yaxis: axisStyle(escapeLabel(input.yTitle), input.yRange) as Partial<Layout["yaxis"]>,
     shapes,
@@ -234,7 +240,7 @@ export function buildResidualFigure(input: ResidualFigureInput): Figure {
   const layout: Partial<Layout> = {
     ...baseLayout(input.revision),
     showlegend: false,
-    margin: { l: 16, r: 16, t: 12, b: 16 },
+    margin: { l: PLOT_LEFT_MARGIN, r: 16, t: 12, b: 16 },
     xaxis: { ...axisStyle(escapeLabel(input.xTitle), { min: null, max: null }), zeroline: false } as Partial<Layout["xaxis"]>,
     yaxis: {
       ...axisStyle(escapeLabel(labelWithUnit("Residual", input.yUnit)), { min: null, max: null }),

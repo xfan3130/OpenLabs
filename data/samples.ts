@@ -21,7 +21,9 @@ export interface SampleExperiment {
   description: string;
   /** The model the data was generated from, suggested when the sample loads. */
   suggestedModel: RegressionModel;
-  build: () => SampleColumn[];
+  /** Seed for the simulated measurement noise, so every load gives identical data. */
+  seed: number;
+  build: (seed: number) => SampleColumn[];
 }
 
 function range(start: number, stop: number, step: number, decimals: number): number[] {
@@ -38,8 +40,9 @@ export const SAMPLE_EXPERIMENTS: SampleExperiment[] = [
     description:
       "A cart released from rest on a ramp, tracked by a motion sensor. Position follows x = ½at² with a ≈ 9.8 m/s² plus ~3 mm of sensor noise. Fit a quadratic: the x² coefficient is a/2.",
     suggestedModel: "quadratic",
-    build: () => {
-      const noise = gaussian(mulberry32(20240901));
+    seed: 4,
+    build: (seed) => {
+      const noise = gaussian(mulberry32(seed));
       const a = 9.8;
       const t = range(0, 1.2, 0.05, 2);
       const x = t.map((ti) => roundTo(0.5 * a * ti * ti + 0.003 * noise(), 3));
@@ -55,8 +58,9 @@ export const SAMPLE_EXPERIMENTS: SampleExperiment[] = [
     description:
       "Force applied to a spring versus its extension. F = kx with k ≈ 25 N/m and ±0.05 N force-sensor noise. Fit a line: the slope is the spring constant.",
     suggestedModel: "linear",
-    build: () => {
-      const noise = gaussian(mulberry32(1678));
+    seed: 9,
+    build: (seed) => {
+      const noise = gaussian(mulberry32(seed));
       const k = 25;
       const ext = range(0.02, 0.2, 0.02, 2);
       const f = ext.map((e) => roundTo(k * e + 0.05 * noise(), 2));
@@ -72,8 +76,9 @@ export const SAMPLE_EXPERIMENTS: SampleExperiment[] = [
     description:
       "Voltage across a 2.2 s time-constant RC circuit while discharging from 5 V: V = V₀e^(−t/RC). Fit an exponential: B = −1/RC.",
     suggestedModel: "exponential",
-    build: () => {
-      const noise = gaussian(mulberry32(4242));
+    seed: 2,
+    build: (seed) => {
+      const noise = gaussian(mulberry32(seed));
       const tau = 2.2;
       const t = range(0, 10, 0.5, 1);
       const v = t.map((ti) => roundTo(Math.max(0.005, 5 * Math.exp(-ti / tau) * (1 + 0.01 * noise())), 3));
@@ -89,8 +94,9 @@ export const SAMPLE_EXPERIMENTS: SampleExperiment[] = [
     description:
       "Period of a simple pendulum for different string lengths: T = 2π√(L/g). Fit a power law: the exponent should be close to 0.5.",
     suggestedModel: "power",
-    build: () => {
-      const noise = gaussian(mulberry32(981));
+    seed: 5,
+    build: (seed) => {
+      const noise = gaussian(mulberry32(seed));
       const g = 9.81;
       const L = range(0.1, 1.0, 0.1, 2);
       const T = L.map((l) => roundTo(2 * Math.PI * Math.sqrt(l / g) + 0.01 * noise(), 3));
@@ -105,7 +111,7 @@ export const SAMPLE_EXPERIMENTS: SampleExperiment[] = [
 /** Create a fresh dataset for a sample, with axes chosen and its model suggested. */
 export function buildSampleDataset(sample: SampleExperiment): Dataset {
   const cols: DataColumn[] = [];
-  for (const c of sample.build()) {
+  for (const c of sample.build(sample.seed)) {
     cols.push(createNumericColumn(cols, { ...c, origin: { type: "imported" } }));
   }
   const dataset = createDataset({
