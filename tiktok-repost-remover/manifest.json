@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "TikTok Repost Remover",
+  "version": "1.0.0",
+  "description": "Removes reposts from your own TikTok profile, one at a time, using the browser session you are already logged into.",
+  "minimum_chrome_version": "110",
+  "permissions": ["storage", "scripting"],
+  "host_permissions": ["https://www.tiktok.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "TikTok Repost Remover",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.tiktok.com/*"],
+      "js": ["selectors.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

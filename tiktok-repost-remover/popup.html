@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TikTok Repost Remover</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>TikTok Repost Remover</h1>
+      <span id="statusPill" class="pill">…</span>
+    </header>
+
+    <div id="notice" class="notice" hidden></div>
+
+    <section class="card">
+      <div id="message" class="message">Connecting to the TikTok tab…</div>
+      <div class="counts">
+        <div><span id="cRemoved">0</span><label id="cRemovedLabel">Removed</label></div>
+        <div><span id="cSkipped">0</span><label>Skipped</label></div>
+        <div><span id="cFailed">0</span><label>Failed</label></div>
+        <div><span id="cProcessed">0</span><label>Processed</label></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button id="btnStart" class="primary">Start Removing Reposts</button>
+      <button id="btnPause">Pause</button>
+      <button id="btnResume">Resume</button>
+      <button id="btnStop" class="danger">Stop</button>
+    </section>
+
+    <details id="settingsBox" open>
+      <summary>Settings</summary>
+      <form id="settings" class="settings">
+        <label class="check dry">
+          <input type="checkbox" id="dryRun" checked />
+          <span><b>Dry run</b> — never removes anything</span>
+        </label>
+        <label>
+          Dry-run depth
+          <select id="dryRunDepth">
+            <option value="inspect">Inspect — opens videos, never clicks Remove</option>
+            <option value="list">List only — no clicks at all</option>
+          </select>
+        </label>
+        <div class="grid2">
+          <label>Min delay (s)<input type="number" id="minDelaySec" min="1" max="120" step="0.5" /></label>
+          <label>Max delay (s)<input type="number" id="maxDelaySec" min="1" max="300" step="0.5" /></label>
+          <label>Max reposts / run<input type="number" id="maxActions" min="1" max="5000" step="1" /></label>
+          <label>Auto-pause after N problems<input type="number" id="maxConsecutiveProblems" min="1" max="50" step="1" /></label>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="requireOwnProfile" checked />
+          <span>Require "Edit profile" (own-profile check)</span>
+        </label>
+      </form>
+    </details>
+
+    <section class="logbox">
+      <div class="logbar">
+        <b>Activity log</b>
+        <span>
+          <button id="btnDiagnose" title="Log what the extension can detect on this page">Diagnose page</button>
+          <button id="btnCopy">Copy</button>
+          <button id="btnClear">Clear</button>
+        </span>
+      </div>
+      <ol id="log" class="log"></ol>
+    </section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

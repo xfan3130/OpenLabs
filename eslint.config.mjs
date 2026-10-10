@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone Chrome extension (plain browser JS, not part of the Next.js app).
+    "tiktok-repost-remover/**",
   ]),
 ]);
 
