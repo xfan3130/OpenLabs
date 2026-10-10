@@ -57,7 +57,7 @@ Settings:
 - **Dry run** (on by default). Choose a depth:
   - *Inspect*: opens each video and its Share menu and checks that "Remove repost" is there, but **never clicks it**.
   - *List only*: scrolls the grid and lists the reposts it finds, with **no clicks at all**.
-- **Min/Max delay**: a random wait between actions. The default is 2–5 s and the minimum allowed is 1 s.
+- **Min/Max delay**: a random wait between actions. The default is 2–5 s. The minimum allowed is 0.2 s; for maximum speed use 0.2–0.5 s, but TikTok is more likely to show a "too fast" warning (the run then stops by itself).
 - **Max reposts / run**: how many reposts to process per run (50 by default).
 - **Auto-pause after N problems**: pauses after N skips or failures in a row (3 by default).
 - **Require "Edit profile"**: refuses to run unless this is clearly your own profile.

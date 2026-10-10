@@ -83,7 +83,7 @@ function readForm() {
     maxConsecutiveProblems: Number($('maxConsecutiveProblems').value),
     requireOwnProfile: $('requireOwnProfile').checked,
   };
-  if (!Number.isFinite(s.minDelaySec) || s.minDelaySec < 1) return { error: 'Min delay must be at least 1 second.' };
+  if (!Number.isFinite(s.minDelaySec) || s.minDelaySec < 0.2) return { error: 'Min delay must be at least 0.2 seconds.' };
   if (!Number.isFinite(s.maxDelaySec) || s.maxDelaySec < s.minDelaySec) return { error: 'Max delay must be ≥ min delay.' };
   if (s.maxDelaySec > 300) return { error: 'Max delay must be ≤ 300 seconds.' };
   if (!Number.isInteger(s.maxActions) || s.maxActions < 1 || s.maxActions > 5000) return { error: 'Max reposts must be a whole number 1–5000.' };

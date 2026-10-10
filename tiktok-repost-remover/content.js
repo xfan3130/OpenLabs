@@ -40,7 +40,7 @@
   function sanitizeSettings(raw) {
     const s = Object.assign({}, DEFAULT_SETTINGS, raw || {});
     const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
-    s.minDelaySec = Math.min(120, Math.max(1, num(s.minDelaySec, DEFAULT_SETTINGS.minDelaySec)));
+    s.minDelaySec = Math.min(120, Math.max(0.2, num(s.minDelaySec, DEFAULT_SETTINGS.minDelaySec)));
     s.maxDelaySec = Math.min(300, Math.max(s.minDelaySec, num(s.maxDelaySec, DEFAULT_SETTINGS.maxDelaySec)));
     s.maxActions = Math.min(5000, Math.max(1, Math.floor(num(s.maxActions, DEFAULT_SETTINGS.maxActions))));
     s.maxConsecutiveProblems = Math.min(50, Math.max(1, Math.floor(num(s.maxConsecutiveProblems, 3))));
@@ -52,7 +52,7 @@
 
   // Fixed (non-configurable) timeouts. Polling-based, so paused time is not counted.
   const T = {
-    poll: 200,
+    poll: 100,
     openDetail: 10000,
     menuHover: 1500,
     menuClick: 4000,
@@ -301,7 +301,7 @@
     const link = S.findItemLinkById(item.id); // fresh lookup: never reuse a stale element
     if (!link) return { ok: false, reason: 'no longer on the page' };
     link.scrollIntoView({ block: 'center', inline: 'nearest' });
-    await sleep(400);
+    await sleep(150);
     const fresh = S.findItemLinkById(item.id);
     if (!fresh) return { ok: false, reason: 'disappeared after scrolling' };
     await domClick(fresh, `open repost ${item.id}`);
@@ -329,18 +329,33 @@
    * the menu that appeared offers "Repost" (i.e. NOT reposted by you). btn is null
    * when no share button exists.
    */
+  // Learned on the first repost: does this TikTok layout open the share menu on
+  // click (true) or on hover (false)? Saves a 1.5 s hover timeout per repost.
+  let shareOpensOnClick = null;
+
   async function openShareMenu() {
     const btn = S.findShareButton();
     if (!btn) return { btn: null, newRepost: false };
     if (S.findRemoveRepostControl()) return { btn, newRepost: false }; // already open
     const baseline = repostBaseline();
     const menuReady = () => S.findRemoveRepostControl() || newRepostSince(baseline);
-    // Some TikTok layouts open the share menu on hover, others on click.
+    // Some TikTok layouts open the share menu on hover, others on click. Try the
+    // method that worked last time first, then the other one.
     await checkpoint();
-    hover(btn);
-    if (!(await waitFor(menuReady, T.menuHover))) {
+    if (shareOpensOnClick) {
       await domClick(btn, 'Share');
-      await waitFor(menuReady, T.menuClick);
+      if (!(await waitFor(menuReady, T.menuClick))) {
+        hover(btn);
+        if (await waitFor(menuReady, T.menuHover)) shareOpensOnClick = false;
+      }
+    } else {
+      hover(btn);
+      if (await waitFor(menuReady, T.menuHover)) {
+        shareOpensOnClick = false;
+      } else {
+        await domClick(btn, 'Share');
+        if (await waitFor(menuReady, T.menuClick)) shareOpensOnClick = true;
+      }
     }
     return { btn, newRepost: !S.findRemoveRepostControl() && !!newRepostSince(baseline) };
   }
@@ -396,7 +411,7 @@
     // The menu closed without a toast: re-open it. After a successful removal it
     // must offer "Repost", not "Remove repost".
     if (shareBtn && shareBtn.isConnected) unhover(shareBtn);
-    await sleep(600);
+    await sleep(300);
     const m = await openShareMenu();
     if (S.findRemovedToast()) return { ok: true, how: 'TikTok confirmation toast (late)' };
     if (S.findRemoveRepostControl()) return { ok: false, reason: '"Remove repost" is still offered after clicking it' };
@@ -462,7 +477,7 @@
     // "reached the bottom" transition, even if we were already at the bottom.
     await checkpoint();
     window.scrollBy({ top: -Math.round(window.innerHeight / 2), behavior: 'auto' });
-    await sleep(300);
+    await sleep(150);
     const items = S.collectRepostItems();
     if (items.length) items[items.length - 1].link.scrollIntoView({ block: 'end' });
     window.scrollTo({ top: se.scrollHeight, behavior: 'auto' });
@@ -539,7 +554,7 @@
           if (!(await closeDetail(profilePath))) {
             throw new HaltError('Could not close the video overlay; stopping to avoid acting on the wrong item.');
           }
-          await sleep(500);
+          await sleep(200);
           assertBackOnGrid(profilePath);
         }
 
