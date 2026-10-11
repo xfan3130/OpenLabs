@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // After Effects ExtendScript (ES3), not part of the web app:
+    "after-effects/**",
   ]),
 ]);
 
