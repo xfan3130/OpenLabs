@@ -1,0 +1,35 @@
+name: Build After Effects JSXBIN
+
+on:
+  push:
+    paths:
+      - "after-effects/**.jsx"
+      - ".github/workflows/build-jsxbin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Adobe's ExtendScript compiler only ships for Windows and macOS.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Compile .jsx to .jsxbin
+        shell: bash
+        run: npx --yes jsxbin@2.3.0 -i after-effects/BeatMarker.jsx -o after-effects/BeatMarker.jsxbin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BeatMarker-jsxbin
+          path: after-effects/*.jsxbin
+      - name: Commit compiled file
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add after-effects/*.jsxbin
+          git diff --cached --quiet || (git commit -m "Build BeatMarker.jsxbin" && git push)
